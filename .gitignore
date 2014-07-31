@@ -1,0 +1,9 @@
+.idea
+gen
+instrumentation/gen
+instrumentation/local.properties
+out
+obj
+libs
+local.properties
+assets/server_password
