@@ -9,12 +9,6 @@
 
 #include "log.h"
 
-// TODO: Error callback endpoint
-static void err(const char *error)
-{
-    LOGE("%s", error);
-}
-
 // We cache these because JNI calls are slow and we perform a lot of them.
 static jclass arrayListClass;
 static jmethodID arrayListInit;

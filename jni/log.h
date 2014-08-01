@@ -8,3 +8,4 @@
 #define LOGE(...) _log(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
 void _log(int priority, const char *tag, const char *fmt, ...);
+void err(const char *error);

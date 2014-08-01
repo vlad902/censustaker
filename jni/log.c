@@ -16,3 +16,9 @@ void _log(int priority, const char *tag, const char *fmt, ...)
 
     __android_log_write(priority, tag, buf);
 }
+
+// TODO: Error callback endpoint
+void err(const char *error)
+{
+    LOGE("%s", error);
+}
