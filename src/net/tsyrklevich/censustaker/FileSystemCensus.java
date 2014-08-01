@@ -1,6 +1,5 @@
 package net.tsyrklevich.censustaker;
 
-import android.util.Log;
 import com.esotericsoftware.wildcard.Paths;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -30,8 +29,9 @@ public class FileSystemCensus {
     public int gid;
     public int size;
     public int mode;
+    public String selinuxContext; // @Nullable
 
-    public FileInformation(byte[] path, byte[] linkPath, int uid, int gid, int size, int mode) {
+    public FileInformation(byte[] path, byte[] linkPath, int uid, int gid, int size, int mode, byte[] selinuxContext) {
       this.path = new String(path);
       if (linkPath != null) {
         this.linkPath = new String(linkPath);
@@ -40,6 +40,9 @@ public class FileSystemCensus {
       this.gid = gid;
       this.size = size;
       this.mode = mode;
+      if (selinuxContext != null) {
+        this.selinuxContext = new String(selinuxContext);
+      }
     }
   }
 
@@ -70,6 +73,7 @@ public class FileSystemCensus {
         "/default.prop",
         "/property_contexts",
         "/seapp_contexts",
+        "/sepolicy",
         "/proc/cmdline",
         "/proc/config.gz",
         "/proc/consoles",
@@ -110,6 +114,8 @@ public class FileSystemCensus {
     for (String procDir : procDirs) {
       files.add(String.format("/proc/%s/cmdline", procDir));
       files.add(String.format("/proc/%s/status", procDir));
+      files.add(String.format("/proc/%s/attr/current", procDir));
+      files.add(String.format("/proc/%s/attr/fscreate", procDir));
     }
 
     return files;
@@ -119,7 +125,7 @@ public class FileSystemCensus {
     Map<String, String> fileContents = new HashMap<>();
     for (String file : interestingFiles()) {
       try {
-        Log.i("censustaker", "Reading " + file);
+        //Log.i("censustaker", "Reading " + file);
         String contents = new String(Base64.encodeBase64(FileUtils.readFileToByteArray(new File(file))));
         // TODO: Dump if the file is too big?
         fileContents.put(file, contents);

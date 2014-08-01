@@ -6,7 +6,9 @@
 #include <limits.h>
 #include <unistd.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
+#include "selinux.h"
 #include "log.h"
 
 // We cache these because JNI calls are slow and we perform a lot of them.
@@ -44,7 +46,7 @@ static bool resolveJNIFunctions(JNIEnv *env)
         return false;
     }
 
-    fileInformationInit = (*env)->GetMethodID(env, fileInformationClass, "<init>", "(Lnet/tsyrklevich/censustaker/FileSystemCensus;[B[BIIII)V");
+    fileInformationInit = (*env)->GetMethodID(env, fileInformationClass, "<init>", "(Lnet/tsyrklevich/censustaker/FileSystemCensus;[B[BIIII[B)V");
     if (fileInformationInit == NULL) {
         err("Failed to find FileInformation#init");
         return false;
@@ -73,8 +75,8 @@ static void addToArrayList(JNIEnv *env, jobject *array, jobject *object)
     }
 }
 
-static jobject createFileInformation(JNIEnv *env, const char *path, const char *linkpath, int uid,
-        int gid, int size, int mode)
+static jobject createFileInformation(JNIEnv *env, const char *path, const char *linkpath,
+        int uid, int gid, int size, int mode, char *selinuxcontext)
 {
     jbyteArray jpath = (*env)->NewByteArray(env, strlen(path));
     if (jpath == NULL) {
@@ -93,12 +95,25 @@ static jobject createFileInformation(JNIEnv *env, const char *path, const char *
         (*env)->SetByteArrayRegion(env, jlinkpath, 0, strlen(linkpath), (jbyte*)linkpath);
     }
 
+    jbyteArray jselinuxcontext = NULL;
+    if (selinuxcontext) {
+        jselinuxcontext = (*env)->NewByteArray(env, strlen(selinuxcontext));
+        if (jselinuxcontext == NULL) {
+            err("NewByteArray failed for selinuxcontext");
+            return NULL;
+        }
+        (*env)->SetByteArrayRegion(env, jselinuxcontext, 0, strlen(selinuxcontext), (jbyte*)selinuxcontext);
+    }
+
     jobject fi = (*env)->NewObject(env, fileInformationClass, fileInformationInit, NULL, jpath,
-            jlinkpath, (jint)uid, (jint)gid, (jint)size, (jint)mode);
+            jlinkpath, (jint)uid, (jint)gid, (jint)size, (jint)mode, jselinuxcontext);
 
     (*env)->DeleteLocalRef(env, jpath);
     if (jlinkpath) {
         (*env)->DeleteLocalRef(env, jlinkpath);
+    }
+    if (jselinuxcontext) {
+        (*env)->DeleteLocalRef(env, jselinuxcontext);
     }
 
     if (fi == NULL) {
@@ -133,7 +148,10 @@ static void scanDirRecursive(JNIEnv * env, jobject array, const char *dir, int d
             snprintf(path, sizeof(path), "%s/%s", dir, de->d_name);
         }
 
-        lstat(path, &st);
+        if (lstat(path, &st) < 0) {
+            LOGE("Failed to lstat %s", path);
+            continue;
+        }
 
         if ((st.st_mode & S_IFMT) == S_IFLNK) {
             if ((linkpath_size = readlink(path, _linkpath, sizeof(_linkpath))) <= 0) {
@@ -147,18 +165,26 @@ static void scanDirRecursive(JNIEnv * env, jobject array, const char *dir, int d
             linkpath = NULL;
         }
 
-#if 0
-        LOGI("path=%s linkpath=%s uid=%lu gid=%lu size=%llu mode=%o",
+        char *selinuxcontext = NULL;
+        lgetfilecon(path, &selinuxcontext);
+
+#if 1
+        LOGI("path=%s linkpath=%s uid=%lu gid=%lu size=%llu mode=%o selinuxcontext=%s",
                 path,
                 linkpath,
                 st.st_uid,
                 st.st_gid,
                 st.st_size,
-                st.st_mode);
+                st.st_mode,
+                selinuxcontext);
 #endif
 
-        jobject object = createFileInformation(env, path, linkpath, st.st_uid, st.st_gid, st.st_size,
-                st.st_mode);
+        jobject object = createFileInformation(env, path, linkpath, st.st_uid, st.st_gid,
+                st.st_size, st.st_mode, selinuxcontext);
+
+        if (selinuxcontext) {
+            free(selinuxcontext);
+        }
 
         if (object != NULL) {
             addToArrayList(env, array, object);
@@ -183,6 +209,7 @@ JNIEXPORT jobject JNICALL Java_net_tsyrklevich_censustaker_FileSystemCensus_scan
             return NULL;
         }
 
+        resolveSELinuxFunctions();
         jniInitialized = true;
     }
 
