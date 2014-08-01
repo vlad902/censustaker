@@ -52,7 +52,7 @@ public class PackageManagerCensus {
     // TODO: ungrouped permissions? Check against pm list permissions -g
     for (PermissionGroupInfo pgi : pm.getAllPermissionGroups(PackageManager.GET_META_DATA)) {
       try {
-        allPermissions.addAll(pm.queryPermissionsByGroup(pgi.name, 0));
+        allPermissions.addAll(pm.queryPermissionsByGroup(pgi.name, PackageManager.GET_META_DATA));
       } catch (PackageManager.NameNotFoundException e) {
         e.printStackTrace();
       }
