@@ -168,7 +168,7 @@ static void scanDirRecursive(JNIEnv * env, jobject array, const char *dir, int d
         char *selinuxcontext = NULL;
         lgetfilecon(path, &selinuxcontext);
 
-#if 1
+#if 0
         LOGI("path=%s linkpath=%s uid=%lu gid=%lu size=%llu mode=%o selinuxcontext=%s",
                 path,
                 linkpath,
