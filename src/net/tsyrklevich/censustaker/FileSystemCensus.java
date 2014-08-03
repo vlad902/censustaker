@@ -3,15 +3,16 @@ package net.tsyrklevich.censustaker;
 import com.esotericsoftware.wildcard.Paths;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.filefilter.RegexFileFilter;
 
 public class FileSystemCensus {
@@ -131,14 +132,32 @@ public class FileSystemCensus {
     return files;
   }
 
+  /**
+   * Unfortunately Java/Apache-commons various APIs to read a whole file don't
+   *  work well with /proc because stat() returns st_size=0, so I wrote my own.
+   */
+  static private String readFileToBase64(String path) throws IOException {
+    ByteArrayOutputStream contents = new ByteArrayOutputStream();
+    byte chunk[] = new byte[1024];
+
+    RandomAccessFile f = new RandomAccessFile(path, "r");
+    int len = 0;
+    while (true) {
+      len = f.read(chunk);
+      if (len == -1) {
+        break;
+      }
+      contents.write(chunk, 0, len);
+    }
+
+    return new String(Base64.encodeBase64(contents.toByteArray()));
+  }
+
   private static void pollSmallFileContents(Map<String, JsonElement> results) {
     Map<String, String> fileContents = new HashMap<>();
-    for (String file : interestingFiles()) {
+    for (String path : interestingFiles()) {
       try {
-        //Log.i("censustaker", "Reading " + file);
-        String contents = new String(Base64.encodeBase64(FileUtils.readFileToByteArray(new File(file))));
-        // TODO: Dump if the file is too big?
-        fileContents.put(file, contents);
+        fileContents.put(path, readFileToBase64(path));
       } catch (IOException e) {
       }
     }
