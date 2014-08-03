@@ -59,6 +59,14 @@ public class FileSystemCensus {
     filePerms.addAll(scanDirRecursive("/proc/cpu", 1000));
     filePerms.addAll(scanDirRecursive("/proc/tty", 1000));
     filePerms.addAll(scanDirRecursive("/sbin", 1000));
+
+    /*
+     * /sys is really big, so we cherry pick things that we think might be
+     *  interesting
+     */
+    filePerms.addAll(scanDirRecursive("/sys", 2));
+    filePerms.addAll(scanDirRecursive("/sys/fs/selinux", 1000));
+
     filePerms.addAll(scanDirRecursive("/system", 1000));
     filePerms.addAll(scanDirRecursive("/vendor", 1000));
     results.put("file_permissions", gson.toJsonTree(filePerms.toArray(),
@@ -107,6 +115,8 @@ public class FileSystemCensus {
     paths.glob("/", "init*.rc");
     paths.glob("/", "ueventd*.rc");
     paths.glob("/system/etc/permissions", "*.xml");
+    paths.glob("/sys/fs/selinux", "**" , "!class/**");
+    paths.glob("/sys/fs/module", "**/version");
     files.addAll(paths.getPaths());
 
     // We have to do these manually because /proc is wacky.
