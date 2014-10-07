@@ -83,6 +83,8 @@ public class FileSystemCensus {
         "/property_contexts",
         "/seapp_contexts",
         "/sepolicy",
+        "/data/local.prop",
+        "/factory/factory.prop",
         "/proc/cmdline",
         "/proc/config.gz",
         "/proc/consoles",
@@ -104,7 +106,10 @@ public class FileSystemCensus {
         "/proc/bus/input/devices",
         "/proc/net/unix",
         "/proc/self/maps",
-        "/proc/tty/drivers"
+        "/proc/tty/drivers",
+        "/system/build.prop",
+        "/system/default.prop",
+        "/system/build.prop"
      /*
       * /proc/driver ?
       * /proc/tty/**
