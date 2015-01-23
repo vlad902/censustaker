@@ -52,24 +52,24 @@ public class FileSystemCensus {
 
     ArrayList<FileInformation> filePerms = new ArrayList<>();
     filePerms.addAll(scanDirRecursive("/", 1));
-    filePerms.addAll(scanDirRecursive("/proc", 1));
     filePerms.addAll(scanDirRecursive("/data/system", 1000));
     filePerms.addAll(scanDirRecursive("/dev", 1000));
     filePerms.addAll(scanDirRecursive("/etc", 1000));
+    filePerms.addAll(scanDirRecursive("/sbin", 1000));
+    filePerms.addAll(scanDirRecursive("/system", 1000));
+    filePerms.addAll(scanDirRecursive("/vendor", 1000));
+
+    /*
+     * /proc and /sys are really big, so we cherry pick things that we think
+     *  might be interesting
+     */
+    filePerms.addAll(scanDirRecursive("/proc", 1));
     filePerms.addAll(scanDirRecursive("/proc/bus", 1000));
     filePerms.addAll(scanDirRecursive("/proc/cpu", 1000));
     filePerms.addAll(scanDirRecursive("/proc/tty", 1000));
-    filePerms.addAll(scanDirRecursive("/sbin", 1000));
-
-    /*
-     * /sys is really big, so we cherry pick things that we think might be
-     *  interesting
-     */
     filePerms.addAll(scanDirRecursive("/sys", 2));
     filePerms.addAll(scanDirRecursive("/sys/fs/selinux", 1000));
 
-    filePerms.addAll(scanDirRecursive("/system", 1000));
-    filePerms.addAll(scanDirRecursive("/vendor", 1000));
     results.put("file_permissions", gson.toJsonTree(filePerms.toArray(),
         filePerms.toArray().getClass()));
   }
@@ -105,6 +105,7 @@ public class FileSystemCensus {
         "/proc/zoneinfo",
         "/proc/bus/input/devices",
         "/proc/net/unix",
+        "/proc/self/environ",
         "/proc/self/maps",
         "/proc/tty/drivers",
         "/system/build.prop",
