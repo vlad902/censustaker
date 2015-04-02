@@ -92,6 +92,7 @@ public class FileSystemCensus {
         "/proc/devices",
         "/proc/fb",
         "/proc/filesystems",
+        "/proc/interrupts",
         "/proc/iomem",
         "/proc/meminfo",
         "/proc/misc",
@@ -108,6 +109,10 @@ public class FileSystemCensus {
         "/proc/self/environ",
         "/proc/self/maps",
         "/proc/tty/drivers",
+        "/sys/fs/selinux/deny_unknown",
+        "/sys/fs/selinux/enforce",
+        "/sys/fs/selinux/policy",
+        "/sys/fs/selinux/reject_unknown",
         "/system/build.prop",
         "/system/default.prop",
         "/system/build.prop"
