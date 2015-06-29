@@ -105,6 +105,7 @@ public class FileSystemCensus {
         "/proc/vmstat",
         "/proc/zoneinfo",
         "/proc/bus/input/devices",
+        "/proc/cpu/alignment",
         "/proc/net/unix",
         "/proc/self/environ",
         "/proc/self/maps",
