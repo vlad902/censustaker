@@ -19,6 +19,11 @@ import org.apache.commons.io.filefilter.DirectoryFileFilter;
 public class PropertiesCensus {
   private static final Gson gson = new Gson();
 
+  private static void pollEnvironmentVariables(Map<String, JsonElement> results) {
+    Map<String, String> env_vars = System.getenv();
+    results.put("environment_variables", gson.toJsonTree(env_vars, env_vars.getClass()));
+  }
+
   private static void pollSystemProperties(Map<String, JsonElement> results) {
     Pattern pattern = Pattern.compile("^\\[(.+)\\]: \\[(.+)\\]$");
     Map<String, String> properties = new HashMap<>();
@@ -65,6 +70,7 @@ public class PropertiesCensus {
     Map<String, JsonElement> results = new HashMap<>();
     pollSystemProperties(results);
     pollSysctl(results);
+    pollEnvironmentVariables(results);
 
     return results;
   }

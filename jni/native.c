@@ -128,7 +128,7 @@ static void scanDirRecursive(JNIEnv * env, jobject array, const char *dir, int d
 {
     DIR *dirp = opendir(dir);
     if (!dirp) {
-        err("opendir failed");
+        LOGE("opendir failed %s", dir);
         return;
     }
 
@@ -155,7 +155,7 @@ static void scanDirRecursive(JNIEnv * env, jobject array, const char *dir, int d
 
         if ((st.st_mode & S_IFMT) == S_IFLNK) {
             if ((linkpath_size = readlink(path, _linkpath, sizeof(_linkpath))) <= 0) {
-                err("readlink failed");
+                LOGE("readlink failed %s", path);
                 strcpy(_linkpath, "error");
             } else {
                 _linkpath[linkpath_size] = 0;

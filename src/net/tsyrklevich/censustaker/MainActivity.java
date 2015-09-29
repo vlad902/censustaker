@@ -3,6 +3,7 @@ package net.tsyrklevich.censustaker;
 import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -55,7 +56,7 @@ public class MainActivity extends Activity {
   }
 
   private void writeResultsToDisk(String jsonResults) {
-    File outputDir = getCacheDir();
+    File outputDir = Environment.getExternalStorageDirectory();
     try {
       File outputFile = File.createTempFile("device_data", ".json", outputDir);
       FileOutputStream stream = new FileOutputStream(outputFile);

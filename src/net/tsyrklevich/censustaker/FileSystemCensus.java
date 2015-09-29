@@ -58,6 +58,7 @@ public class FileSystemCensus {
     filePerms.addAll(scanDirRecursive("/sbin", 1000));
     filePerms.addAll(scanDirRecursive("/system", 1000));
     filePerms.addAll(scanDirRecursive("/vendor", 1000));
+    filePerms.addAll(scanDirRecursive("/etc", 1000));
 
     /*
      * /proc and /sys are really big, so we cherry pick things that we think
@@ -70,6 +71,8 @@ public class FileSystemCensus {
     filePerms.addAll(scanDirRecursive("/sys", 2));
     filePerms.addAll(scanDirRecursive("/sys/fs/selinux", 1000));
 
+    filePerms.addAll(scanDirRecursive("/proc/self", 4));
+
     results.put("file_permissions", gson.toJsonTree(filePerms.toArray(),
         filePerms.toArray().getClass()));
   }
@@ -80,9 +83,12 @@ public class FileSystemCensus {
   private static List<String> interestingFiles() {
     ArrayList<String> files = new ArrayList<String>(Arrays.asList(
         "/default.prop",
+        "/file_contexts",
         "/property_contexts",
         "/seapp_contexts",
+        "/selinux_version",
         "/sepolicy",
+        "/service_contexts",
         "/data/local.prop",
         "/factory/factory.prop",
         "/proc/cmdline",
