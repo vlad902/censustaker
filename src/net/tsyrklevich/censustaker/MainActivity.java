@@ -123,7 +123,11 @@ public class MainActivity extends Activity {
     }
 
     for (int retries = 4; retries >= 0 && !uploadedRequest; retries--) {
-      if (postResults("census.tsyrklevich.net", compressed)) {
+      // Reminder to self: census.tsyrklevi.ch is configured without SSL so
+      //  that old Android devices without SNI can hit it. Switching to
+      //  census.tsyrklevich.net will require some additional code for
+      //  cert validation and potentially loss of support for old clients.
+      if (postResults("census.tsyrklevi.ch", compressed)) {
         uploadedRequest = true;
       }
 
