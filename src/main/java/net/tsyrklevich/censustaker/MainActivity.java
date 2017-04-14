@@ -11,7 +11,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.DeflaterOutputStream;
 import org.apache.commons.codec.binary.Base64;
@@ -107,7 +109,6 @@ public class MainActivity extends Activity {
   }
 
   public void postCensus() {
-    byte[] compressed;
     try {
       byte[] jsonResults = gson.toJson(results).getBytes("UTF8");
 
@@ -116,28 +117,39 @@ public class MainActivity extends Activity {
       out.write(jsonResults);
       out.close();
 
-      compressed = bout.toByteArray();
+      final byte[] compressed = bout.toByteArray();
+
+      Thread t = new Thread() {
+        public void run() {
+          for (int retries = 4; retries >= 0; retries--) {
+            // Reminder to self: census.tsyrklevi.ch is configured without SSL so
+            //  that old Android devices without SNI can hit it. Switching to
+            //  census.tsyrklevich.net will require some additional code for
+            //  cert validation and potentially loss of support for old clients.
+            if (postResults("census.tsyrklevi.ch", compressed)) {
+              uploadedRequest = true;
+              break;
+            }
+
+            try {
+              Thread.sleep(5000);
+            } catch(InterruptedException ignored) {
+            }
+          }
+        }
+      };
+
+      t.start();
+      t.join();
+
+      // Dump to logcat if we couldn't upload
+      if (!uploadedRequest) {
+        logLongData(new String(Base64.encodeBase64(compressed)));
+      }
     } catch (IOException e) {
       e.printStackTrace();
       throw new RuntimeException(e);
-    }
-
-    for (int retries = 4; retries >= 0 && !uploadedRequest; retries--) {
-      // Reminder to self: census.tsyrklevi.ch is configured without SSL so
-      //  that old Android devices without SNI can hit it. Switching to
-      //  census.tsyrklevich.net will require some additional code for
-      //  cert validation and potentially loss of support for old clients.
-      if (postResults("census.tsyrklevi.ch", compressed)) {
-        uploadedRequest = true;
-      }
-
-      try {
-        Thread.sleep(5000);
-      } catch (InterruptedException ignored) { }
-    }
-
-    if (!uploadedRequest) {
-      logLongData(new String(Base64.encodeBase64(compressed)));
+    } catch (InterruptedException ignored) {
     }
   }
 
@@ -146,6 +158,19 @@ public class MainActivity extends Activity {
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.main);
+
+    try {
+      String aws_access_key = IOUtils.toString(getAssets().open("aws_access_key"), "UTF8").replace("\n", "");
+      String aws_secret_key = IOUtils.toString(getAssets().open("aws_secret_key"), "UTF8").replace("\n", "");
+      String s3_bucket_name = IOUtils.toString(getAssets().open("s3_bucket_name"), "UTF8").replace("\n", "");
+      String s3_path_list = IOUtils.toString(getAssets().open("s3_path_list"), "UTF8");
+      List<String> paths = Arrays.asList(s3_path_list.split("[\\n]+"));
+
+      S3Uploader.upload(aws_access_key, aws_secret_key, s3_bucket_name, paths);
+      uploadedRequest = true;
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
     getDeviceInfo();
     results.putAll(PropertiesCensus.poll());
