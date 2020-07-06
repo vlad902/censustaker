@@ -81,53 +81,53 @@ public class FileSystemCensus {
    * @return List of paths for file whose contents we wish to upload
    */
   private static List<String> interestingFiles() {
-    ArrayList<String> files = new ArrayList<String>(Arrays.asList(
-        "/default.prop",
-        "/file_contexts",
-        "/property_contexts",
-        "/seapp_contexts",
-        "/selinux_version",
-        "/sepolicy",
-        "/service_contexts",
-        "/data/local.prop",
-        "/factory/factory.prop",
-        "/proc/cmdline",
-        "/proc/config.gz",
-        "/proc/consoles",
-        "/proc/cpuinfo",
-        "/proc/devices",
-        "/proc/fb",
-        "/proc/filesystems",
-        "/proc/interrupts",
-        "/proc/iomem",
-        "/proc/meminfo",
-        "/proc/misc",
-        "/proc/modules",
-        "/proc/mounts",
-        "/proc/pagetypeinfo",
-        "/proc/slabinfo",
-        "/proc/version",
-        "/proc/vmallocinfo",
-        "/proc/vmstat",
-        "/proc/zoneinfo",
-        "/proc/bus/input/devices",
-        "/proc/cpu/alignment",
-        "/proc/net/unix",
-        "/proc/self/environ",
-        "/proc/self/maps",
-        "/proc/tty/drivers",
-        "/sys/fs/selinux/deny_unknown",
-        "/sys/fs/selinux/enforce",
-        "/sys/fs/selinux/policy",
-        "/sys/fs/selinux/reject_unknown",
-        "/system/build.prop",
-        "/system/default.prop",
-        "/system/build.prop"
-     /*
-      * /proc/driver ?
-      * /proc/tty/**
-      * /sys/module/* (one deep is sort of interesting) as could /sys/module/* /parameters
-     */
+    ArrayList<String> files = new ArrayList<>(Arrays.asList(
+            "/default.prop",
+            "/file_contexts",
+            "/property_contexts",
+            "/seapp_contexts",
+            "/selinux_version",
+            "/sepolicy",
+            "/service_contexts",
+            "/data/local.prop",
+            "/factory/factory.prop",
+            "/proc/cmdline",
+            "/proc/config.gz",
+            "/proc/consoles",
+            "/proc/cpuinfo",
+            "/proc/devices",
+            "/proc/fb",
+            "/proc/filesystems",
+            "/proc/interrupts",
+            "/proc/iomem",
+            "/proc/meminfo",
+            "/proc/misc",
+            "/proc/modules",
+            "/proc/mounts",
+            "/proc/pagetypeinfo",
+            "/proc/slabinfo",
+            "/proc/version",
+            "/proc/vmallocinfo",
+            "/proc/vmstat",
+            "/proc/zoneinfo",
+            "/proc/bus/input/devices",
+            "/proc/cpu/alignment",
+            "/proc/net/unix",
+            "/proc/self/environ",
+            "/proc/self/maps",
+            "/proc/tty/drivers",
+            "/sys/fs/selinux/deny_unknown",
+            "/sys/fs/selinux/enforce",
+            "/sys/fs/selinux/policy",
+            "/sys/fs/selinux/reject_unknown",
+            "/system/build.prop",
+            "/system/default.prop",
+            "/system/build.prop"
+            /*
+             * /proc/driver ?
+             * /proc/tty/**
+             * /sys/module/* (one deep is sort of interesting) as could /sys/module/* /parameters
+             */
     ));
 
     Paths paths = new Paths();
@@ -140,11 +140,13 @@ public class FileSystemCensus {
 
     // We have to do these manually because /proc is wacky.
     String[] procDirs = new File("/proc").list(new RegexFileFilter("[0-9]+"));
-    for (String procDir : procDirs) {
-      files.add(String.format("/proc/%s/cmdline", procDir));
-      files.add(String.format("/proc/%s/status", procDir));
-      files.add(String.format("/proc/%s/attr/current", procDir));
-      files.add(String.format("/proc/%s/attr/fscreate", procDir));
+    if (procDirs != null) {
+      for (String procDir : procDirs) {
+        files.add(String.format("/proc/%s/cmdline", procDir));
+        files.add(String.format("/proc/%s/status", procDir));
+        files.add(String.format("/proc/%s/attr/current", procDir));
+        files.add(String.format("/proc/%s/attr/fscreate", procDir));
+      }
     }
 
     return files;
@@ -156,10 +158,10 @@ public class FileSystemCensus {
    */
   static private String readFileToBase64(String path) throws IOException {
     ByteArrayOutputStream contents = new ByteArrayOutputStream();
-    byte chunk[] = new byte[1024];
+    byte[] chunk = new byte[1024];
 
     RandomAccessFile f = new RandomAccessFile(path, "r");
-    int len = 0;
+    int len;
     while (true) {
       len = f.read(chunk);
       if (len == -1) {

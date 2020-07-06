@@ -7,15 +7,17 @@ import android.content.pm.PathPermission;
 import android.content.pm.PermissionGroupInfo;
 import android.content.pm.PermissionInfo;
 import android.content.pm.ProviderInfo;
-import android.os.Build;
 import android.os.PatternMatcher;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -63,10 +65,8 @@ public class PackageManagerCensus {
       Map<String, String> permission = new HashMap<>();
       permission.put("packageName", perm.packageName);
       permission.put("name", perm.name);
-      permission.put("protectionLevel", String.format("%d", perm.protectionLevel));
-      if (Build.VERSION.SDK_INT >= 17) {
-        permission.put("flags", String.format("%d", perm.flags));
-      }
+      permission.put("protectionLevel", String.format(Locale.getDefault(), "%d", perm.protectionLevel));
+      permission.put("flags", String.format(Locale.getDefault(), "%d", perm.flags));
 
       permissions.add(gson.toJsonTree(permission, permission.getClass()));
     }
@@ -75,9 +75,6 @@ public class PackageManagerCensus {
 
   private static void pollContentProviders(PackageManager pm, Map<String, JsonElement> results) {
     List<ProviderInfo> providerInfos = pm.queryContentProviders(null, 0, 0);
-    if (providerInfos == null) {
-      return;
-    }
 
     List<JsonElement> providers = new ArrayList<>();
     for (ProviderInfo provider : providerInfos) {
@@ -97,9 +94,7 @@ public class PackageManagerCensus {
         providerData.put("writePermission",
             gson.toJsonTree(provider.writePermission, provider.writePermission.getClass()));
       }
-      if (Build.VERSION.SDK_INT >= 17) {
-        providerData.put("flags", gson.toJsonTree(provider.flags, int.class));
-      }
+      providerData.put("flags", gson.toJsonTree(provider.flags, int.class));
       if(provider.pathPermissions != null) {
         List<String> pathPermissions = new ArrayList<>();
         for (PathPermission pp : provider.pathPermissions) {
